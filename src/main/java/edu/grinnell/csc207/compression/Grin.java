@@ -17,7 +17,7 @@ public class Grin {
      * 
      * @param infile  the file to decode
      * @param outfile the file to ouptut to
-     * @throws IOException 
+     * @throws IOException
      */
     public static void decode(String infile, String outfile) throws IOException {
         BitInputStream in = new BitInputStream(infile);
@@ -38,10 +38,9 @@ public class Grin {
      * 
      * @param file the file to read
      * @return a freqency map for the given file
-     * @throws IOException 
+     * @throws IOException
      */
     public static Map<Short, Integer> createFrequencyMap(String file) throws IOException {
-        // PriorityQueue<Node> pQueue = new PriorityQueue<Node>();
         HashMap<Short, Integer> shortMap = new HashMap<Short, Integer>();
         BitInputStream in = new BitInputStream(file);
         short eof = (short) 256;
@@ -69,7 +68,7 @@ public class Grin {
      * 
      * @param infile  the file to encode.
      * @param outfile the file to write the output to.
-     * @throws IOException 
+     * @throws IOException
      */
     public static void encode(String infile, String outfile) throws IOException {
         Map<Short, Integer> freqMap = createFrequencyMap(infile);
@@ -77,7 +76,9 @@ public class Grin {
         BitInputStream in = new BitInputStream(infile);
         BitOutputStream out = new BitOutputStream(outfile);
         hTree.encode(in, out);
-        in.close();
+        while (in.readBit() != -1) {
+        }
+        ;
         out.close();
     }
 
@@ -85,20 +86,22 @@ public class Grin {
      * The entry point to the program.
      * 
      * @param args the command-line arguments.
-     * @throws IOException 
+     * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-        // TODO: fill me in!
-        System.out.println("Usage: java Grin <encode|decode> <infile> <outfile>");
-        if(args.length == 0){
-            throw new IllegalArgumentException("No arguments provided to command!");
+        
+        if (args.length == 0) {
+            System.out.println("Usage: java Grin <encode|decode> <infile> <outfile>");
+            System.exit(0);
         }
-        switch(args[0]){
+        switch (args[0]) {
             case "encode":
                 encode(args[1], args[2]);
+                System.out.println("File Encoded.");
                 break;
             case "decode":
                 decode(args[1], args[2]);
+                System.out.println("File Decoded.");
                 break;
             default:
                 throw new IllegalArgumentException("Not a valid operation!");

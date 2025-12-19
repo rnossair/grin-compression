@@ -1,13 +1,16 @@
 # Project: Grin Compression
 
-Authors: (_TODO: fill in names here!_)
+Authors: Rayane Nossair
 
 ## Resources
 
-*   (_TODO: fill in resources here!_)
-*   ...
-*   ...
+*   Course page
+*   Java API Docs
 
 ## Revision Log
 
-*   (_TODO: fill in your changes to your project here!_)
+*   N/A
+
+## Note:
+
+* The serialize tree method adds an extra end-of-tree character with code 257. Otherwise it should work the same as the original algorithm.

@@ -73,6 +73,13 @@ public class HuffmanTree {
         root = pQueue.poll();
     }
 
+    /**
+     * Helps build a huffman tree from a serialized tree
+     * 
+     * @param in
+     * @return
+     */
+
     public Node deserialize(BitInputStream in) {
         if (in.readBit() == 0) {
             return new Node((short) in.readBits(9), 1);
@@ -88,48 +95,9 @@ public class HuffmanTree {
      * @param in the input file (as a BitInputStream)
      */
     public HuffmanTree(BitInputStream in) {
+        charTable = new HashMap<Short, String>();
         root = deserialize(in);
         in.readBits(9);
-        // PriorityQueue<Node> pQueue = new PriorityQueue<Node>();
-        // HashMap<Short, Integer> shortMap = new HashMap<Short, Integer>();
-        // short eof = (short) 256;
-        // short eot = (short) 257;
-        // shortMap.put(eof, 1);
-        // short currByte = (short) in.readBits(9);
-        // ;
-        // while (currByte != eot) {
-        // if (currByte == -1) {
-        // break;
-        // }
-        // if (shortMap.containsKey(currByte)) { // increment frequency if map already
-        // contains char
-        // shortMap.put(currByte, shortMap.get(currByte) + 1);
-        // } else {
-        // shortMap.put(currByte, 1);
-        // }
-        // currByte = (short) in.readBits(9);
-
-        // }
-        // for (Short key : shortMap.keySet()) {
-        // pQueue.add(new Node(key, shortMap.get(key)));
-        // }
-        // while (pQueue.size() > 1) {
-        // Node left = pQueue.poll();
-        // Node right = pQueue.poll();
-        // pQueue.add(new Node(left.val + right.val, left, right));
-        // }
-        // root = pQueue.poll();
-    }
-
-    public void serializeHelper(Node rootNode, BitOutputStream out) {
-        if (rootNode.leaf) {
-            out.writeBit(0);
-            out.writeBits(rootNode.c, 9);
-        } else {
-            out.writeBit(1);
-            serializeHelper(rootNode.left, out);
-            serializeHelper(rootNode.right, out);
-        }
     }
 
     public void bctHelper(Node rootNode, String str) {
@@ -141,8 +109,23 @@ public class HuffmanTree {
         }
     }
 
+    /**
+     * Builds a character table that associates each character to its huffman code
+     */
+
     public void buildCharTable() {
         bctHelper(root, "");
+    }
+
+    public void serializeHelper(Node rootNode, BitOutputStream out) {
+        if (rootNode.leaf) {
+            out.writeBit(0);
+            out.writeBits(rootNode.c, 9);
+        } else {
+            out.writeBit(1);
+            serializeHelper(rootNode.left, out);
+            serializeHelper(rootNode.right, out);
+        }
     }
 
     /**
@@ -173,7 +156,7 @@ public class HuffmanTree {
         serialize(out);
 
         buildCharTable(); // building the char codes from huffman tree
-        System.out.println(charTable.toString());
+
         // writing payload
         short currByte = (short) in.readBits(8);
         while (currByte != -1) {
@@ -187,11 +170,14 @@ public class HuffmanTree {
             }
             currByte = (short) in.readBits(8);
         }
-        out.writeBits((short) 256, 9);
-    }
-
-    public void decodeHelper(BitInputStream in, short currCode) {
-
+        // adding the EOF char
+        for (char c : charTable.get((short) 256).toCharArray()) {
+            if (c == '0') {
+                out.writeBit(0);
+            } else {
+                out.writeBit(1);
+            }
+        }
     }
 
     /**
@@ -207,8 +193,15 @@ public class HuffmanTree {
 
         short currBit = (short) in.readBit();
         Node currNode = root;
+        buildCharTable();
+        // System.out.println("hi");
+        // System.out.println("Does the tree contain EOF? " +
+        // charTable.containsKey((short) 256));
         // navigating the tree for each bit
         while (currBit != -1) {
+            // if(dump){
+            // currBit = (short) in.readBit();
+            // }
             if (currBit == 0) {
                 currNode = currNode.left;
             } else {
@@ -217,11 +210,13 @@ public class HuffmanTree {
             // outputing characters to file (except eof)
             if (currNode.leaf) {
                 if (currNode.c != 256) {
-                    System.out.println((char) currNode.c);
-                    out.writeBits(currNode.c, 9);
+                    // System.out.println((char) currNode.c);
+                    out.writeBits(currNode.c, 8);
                     currNode = root;
                 } else {
-                    break;
+                    // System.out.println("I CAN SEEEEEEEEEEEEE");
+
+                    return;
                 }
             }
             currBit = (short) in.readBit();
