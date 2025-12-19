@@ -31,16 +31,16 @@ public class HuffmanTree {
         boolean leaf;
 
         public Node(Integer val, Node left, Node right) {
-            val = val;
+            this.val = val;
             c = 0;
             leaf = false;
-            left = left;
-            right = right;
+            this.left = left;
+            this.right = right;
         }
 
         public Node(short c, Integer val) {
-            c = c;
-            val = val;
+            this.c = c;
+            this.val = val;
             left = null;
             right = null;
             leaf = true;
@@ -73,36 +73,52 @@ public class HuffmanTree {
         root = pQueue.poll();
     }
 
+    public Node deserialize(BitInputStream in) {
+        if (in.readBit() == 0) {
+            return new Node((short) in.readBits(9), 1);
+        }
+        Node left = deserialize(in);
+        Node right = deserialize(in);
+        return new Node(0, left, right);
+    }
+
     /**
      * Constructs a new HuffmanTree from the given file.
      * 
      * @param in the input file (as a BitInputStream)
      */
     public HuffmanTree(BitInputStream in) {
-        PriorityQueue<Node> pQueue = new PriorityQueue<Node>();
-        HashMap<Short, Integer> shortMap = new HashMap<Short, Integer>();
-        short eof = (short) 256;
-        short eot = (short) 257;
-        shortMap.put(eof, 1);
-        short currByte = (short) in.readBits(9);;
-        while (currByte != eot) { 
-            if (currByte == -1) {
-                break;
-            }
-            if (shortMap.containsKey(currByte)) { // increment frequency if map already contains char
-                shortMap.put(currByte, shortMap.get(currByte) + 1);
-            } else {
-                shortMap.put(currByte, 1);
-            }
-            currByte = (short) in.readBits(9);
+        root = deserialize(in);
+        in.readBits(9);
+        // PriorityQueue<Node> pQueue = new PriorityQueue<Node>();
+        // HashMap<Short, Integer> shortMap = new HashMap<Short, Integer>();
+        // short eof = (short) 256;
+        // short eot = (short) 257;
+        // shortMap.put(eof, 1);
+        // short currByte = (short) in.readBits(9);
+        // ;
+        // while (currByte != eot) {
+        // if (currByte == -1) {
+        // break;
+        // }
+        // if (shortMap.containsKey(currByte)) { // increment frequency if map already
+        // contains char
+        // shortMap.put(currByte, shortMap.get(currByte) + 1);
+        // } else {
+        // shortMap.put(currByte, 1);
+        // }
+        // currByte = (short) in.readBits(9);
 
-        }
-        while (pQueue.size() > 1) {
-            Node left = pQueue.poll();
-            Node right = pQueue.poll();
-            pQueue.add(new Node(left.val + right.val, left, right));
-        }
-        root = pQueue.poll();
+        // }
+        // for (Short key : shortMap.keySet()) {
+        // pQueue.add(new Node(key, shortMap.get(key)));
+        // }
+        // while (pQueue.size() > 1) {
+        // Node left = pQueue.poll();
+        // Node right = pQueue.poll();
+        // pQueue.add(new Node(left.val + right.val, left, right));
+        // }
+        // root = pQueue.poll();
     }
 
     public void serializeHelper(Node rootNode, BitOutputStream out) {
@@ -157,12 +173,11 @@ public class HuffmanTree {
         serialize(out);
 
         buildCharTable(); // building the char codes from huffman tree
-
+        System.out.println(charTable.toString());
         // writing payload
-        short currByte = 0;
+        short currByte = (short) in.readBits(8);
         while (currByte != -1) {
-            currByte = (short) in.readBits(8);
-            String code = charTable.get(currByte);
+            String code = charTable.get((Short) currByte);
             for (char c : code.toCharArray()) {
                 if (c == '0') {
                     out.writeBit(0);
@@ -170,6 +185,7 @@ public class HuffmanTree {
                     out.writeBit(1);
                 }
             }
+            currByte = (short) in.readBits(8);
         }
         out.writeBits((short) 256, 9);
     }
@@ -194,17 +210,17 @@ public class HuffmanTree {
         // navigating the tree for each bit
         while (currBit != -1) {
             if (currBit == 0) {
-                currNode = root.left;
+                currNode = currNode.left;
             } else {
-                currNode = root.right;
+                currNode = currNode.right;
             }
             // outputing characters to file (except eof)
-            if (root.leaf) {
-                if (root.c != 256) {
-                    out.writeBits(currBit, 8);
+            if (currNode.leaf) {
+                if (currNode.c != 256) {
+                    System.out.println((char) currNode.c);
+                    out.writeBits(currNode.c, 9);
                     currNode = root;
-                }
-                else{
+                } else {
                     break;
                 }
             }

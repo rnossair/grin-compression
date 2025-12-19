@@ -21,15 +21,14 @@ public class Grin {
      */
     public static void decode(String infile, String outfile) throws IOException {
         BitInputStream in = new BitInputStream(infile);
-        // BitOutputStream treeOut = new BitOutputStream("serialTree_" + infile);
         BitOutputStream out = new BitOutputStream(outfile);
         int magicNum = in.readBits(32);
-        // treeOut.writeBits(magicNum, magicNum);
         if (magicNum != 1846) {
             throw new IllegalArgumentException("Not a valid .grin file!!");
         }
         HuffmanTree hTree = new HuffmanTree(in);
         hTree.decode(in, out);
+        out.close();
     }
 
     /**
@@ -60,7 +59,7 @@ public class Grin {
             }
 
         }
-
+        in.close();
         return shortMap;
     }
 
@@ -70,18 +69,39 @@ public class Grin {
      * 
      * @param infile  the file to encode.
      * @param outfile the file to write the output to.
+     * @throws IOException 
      */
-    public static void encode(String infile, String outfile) {
-        // TODO: fill me in!
+    public static void encode(String infile, String outfile) throws IOException {
+        Map<Short, Integer> freqMap = createFrequencyMap(infile);
+        HuffmanTree hTree = new HuffmanTree(freqMap);
+        BitInputStream in = new BitInputStream(infile);
+        BitOutputStream out = new BitOutputStream(outfile);
+        hTree.encode(in, out);
+        in.close();
+        out.close();
     }
 
     /**
      * The entry point to the program.
      * 
      * @param args the command-line arguments.
+     * @throws IOException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // TODO: fill me in!
         System.out.println("Usage: java Grin <encode|decode> <infile> <outfile>");
+        if(args.length == 0){
+            throw new IllegalArgumentException("No arguments provided to command!");
+        }
+        switch(args[0]){
+            case "encode":
+                encode(args[1], args[2]);
+                break;
+            case "decode":
+                decode(args[1], args[2]);
+                break;
+            default:
+                throw new IllegalArgumentException("Not a valid operation!");
+        }
     }
 }
